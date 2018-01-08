@@ -43,4 +43,39 @@ def _parseHtml(text):
             continue
     return l
 
+# 将带单位的数字转为正常数字
+def str2float(str):
+    if not str or str =='--':
+        return 0.0
+    str = str.replace(' ', '')
+    pattern = r'[\u4E00-\u9FA50]'
+    r = re.findall(pattern, str)
+    f = re.findall(r'%', str)
+    # 不包含汉字，不包含%，直接返回
+    if not r and not f:
+        return float(str)
+    # 包含%直接替换，返回
+    if f:
+        return float(_replaceStr(f, str))
+    # 包含汉字，先将汉字替换为''，然后进行单位换算
+    if '万' in r and '亿' in r:
+        str = _replaceStr(r, str)
+        str = float(str) * 10000 * 100000000
+        return str
+    if '万' in r:
+        str = _replaceStr(r, str)
+        str = float(str) * 10000
+        return str
+    if '亿' in r:
+        str = _replaceStr(r, str)
+        str = float(str) * 100000000
+        return str
+    # 其他汉字直接返回
+    str = _replaceStr(r, str)
+    return float(str)
 
+
+def _replaceStr(r, str):
+    for i in r:
+        str = str.replace(i, '')
+    return str
