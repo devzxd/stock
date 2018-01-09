@@ -38,7 +38,8 @@ def _parseHtml(text):
 
         try:
             href = i.attrs['href']
-            l.append(re.findall(r'[s][hz]\d{6}', href)[0])
+            # 只获取股票代码
+            l.append(re.findall(r'[s][hz][603]\d{5}', href)[0])
         except:
             continue
     return l
@@ -48,7 +49,7 @@ def str2float(str):
     if not str or str =='--':
         return 0.0
     str = str.replace(' ', '')
-    pattern = r'[\u4E00-\u9FA50]'
+    pattern = r'[\u4E00-\u9FA5]'
     r = re.findall(pattern, str)
     f = re.findall(r'%', str)
     # 不包含汉字，不包含%，直接返回
