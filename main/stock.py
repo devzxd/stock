@@ -119,7 +119,8 @@ def _parserBaiduStockLhb(text, content):
 
 
 def _buildLhbTop(inTop, inTopTable, sb_date, name, code, type):
-    trs = inTopTable.findAll('tr')[1:6]
+    trs = inTopTable.findAll('tr')
+    trs = trs[1:len(trs)-1]
     for tr in trs:
         temp = {}
         tds = tr.findAll('td')
