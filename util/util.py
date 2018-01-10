@@ -48,7 +48,7 @@ def _parseHtml(text):
 def str2float(str):
     if not str or str =='--':
         return 0.0
-    str = str.replace(' ', '')
+    str = str.replace(' ', '').replace(',','')
     pattern = r'[\u4E00-\u9FA5]'
     r = re.findall(pattern, str)
     f = re.findall(r'%', str)
