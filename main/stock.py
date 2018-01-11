@@ -1,15 +1,13 @@
 # -*- coding:utf-8 -*-
 import json
-import threading
-import time
-
+import logging
 import os
+import threading
 from datetime import datetime
 from queue import Queue
 
 import requests
 from bs4 import BeautifulSoup
-import logging
 
 from util.pinyin import PinYin
 from util.util import getStockCode, str2float
@@ -70,24 +68,28 @@ def _parserBaiduStockInfo(text, content):
 
 
 # 解析资金流向
-def _parserBaiduStockJzlx(text, gpMain):
+def _parserBaiduStockJzlx(text, content, execute_date):
+    zjlx = {}
+    content['zjlx'] = zjlx
     soup = BeautifulSoup(text, 'html.parser')
     table = soup.find('table', attrs={'class': '_dailyFunds'})
     if not table:
-        pass
-    else:
-        td = table.findAll('td', attrs={'class': 'ta-right'})
-        if not td:
-            pass
-        else:
-            # 资金流入
-            gpMain['zjlr'] = str2float(td[1].text)
-            # 主力资金流入
-            gpMain['zl_zjlr'] = str2float(td[3].text)
-            # 散户资金流入
-            gpMain['sh_zjlr'] = str2float(td[4].text)
-            # 主力参与度
-            gpMain['zl_cyd'] = str2float(td[5].text.split()[0])
+        return
+    td = table.findAll('td', attrs={'class': 'ta-right'})
+    if not td:
+        return
+
+    # 资金流入
+    zjlx['zjlr'] = str2float(td[1].text)
+    # 主力资金流入
+    zjlx['zl_zjlr'] = str2float(td[3].text)
+    # 散户资金流入
+    zjlx['sh_zjlr'] = str2float(td[4].text)
+    # 主力参与度
+    zjlx['zl_cyd'] = str2float(td[5].text.split()[0])
+    zjlx['name'] = content['name']
+    zjlx['code'] = content['code']
+    zjlx['execute_date'] = execute_date
 
 
 # 解析龙虎榜
@@ -120,7 +122,7 @@ def _parserBaiduStockLhb(text, content):
 
 def _buildLhbTop(inTop, inTopTable, sb_date, name, code, type):
     trs = inTopTable.findAll('tr')
-    trs = trs[1:len(trs)-1]
+    trs = trs[1:len(trs) - 1]
     for tr in trs:
         temp = {}
         tds = tr.findAll('td')
@@ -169,7 +171,7 @@ def baiduStockInfo(lts, path):
                 if not jzlx_text:
                     pass
                 else:
-                    _parserBaiduStockJzlx(jzlx_text, content['gpMain'])
+                    _parserBaiduStockJzlx(jzlx_text, content, content['gpMain']['execute_date'])
                 # 龙虎榜
                 lhb_url = baseUrl + 'lhb/' + l
                 lhb_text = _getBaiduStockHtml(lhb_url)
@@ -210,7 +212,6 @@ def _buildData(content, count, data, threadName, path):
 
 
 if __name__ == '__main__':
-    start = time.time()
     path = os.path.abspath('../')
     logging.info("当前目录:%s" % path)
     now = datetime.now()
@@ -234,13 +235,7 @@ if __name__ == '__main__':
             stockList = stockList[len(l):size]
             t = threading.Thread(target=baiduStockInfo, name='t' + str(i), args=(l, targetPath))
             t.start()
-            threads.put(t)
             i += 1
         if size % step != 0:
             t = threading.Thread(target=baiduStockInfo, name='tlast', args=(stockList, targetPath))
             t.start()
-            threads.put(t)
-        # for thread in threads:
-        #     thread.join()
-        threads.join()
-    print("耗时%ss" % (time.time() - start))

@@ -10,11 +10,6 @@
     3、修复：如果分隔符为空字符串，仍然能正常输出；
     4、升级：可以指定词典的文件路径
 """
-import json
-import threading
-from queue import Queue
-
-import time
 
 __version__ = '0.9'
 __all__ = ["PinYin"]
