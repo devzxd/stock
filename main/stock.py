@@ -25,8 +25,8 @@ pinyin.load_word()
 now = datetime.now()
 today = now.strftime("%Y-%m-%d")
 # 数据存储地址
-post_url = "http://10.156.26.17:8080/combinedInsert"
-
+# post_url = "http://10.156.26.17:8080/combinedInsert"
+post_url = "http://19605m0s99.51mypc.cn:30805/combinedInsert"
 
 def _getBaiduStockHtml(url):
     r = requests.get(url)
@@ -165,20 +165,9 @@ def baiduStockInfo(lts, path):
             _parserBaiduStockInfo(text, content)
             try:
                 # 股票资金流向
-                jzlx_url = baseUrl + 'zjlx/' + l
-                jzlx_text = _getBaiduStockHtml(jzlx_url)
-                # 如果资金流向为空，直接组装数据返回
-                if not jzlx_text:
-                    pass
-                else:
-                    _parserBaiduStockJzlx(jzlx_text, content, content['gpMain']['execute_date'])
+                _buildZJLX(content, l)
                 # 龙虎榜
-                lhb_url = baseUrl + 'lhb/' + l
-                lhb_text = _getBaiduStockHtml(lhb_url)
-                if not lhb_text:
-                    pass
-                else:
-                    _parserBaiduStockLhb(lhb_text, content)
+                _buildLHB(content, l)
             except Exception as e:
                 logging.exception(e)
             count = _buildData(content, count, data, threadName, path)
@@ -192,6 +181,25 @@ def baiduStockInfo(lts, path):
             requests.post(post_url, data=str(data).encode())
         except Exception as e:
             logging.error("%s执行数据存储错误" % threadName, e)
+
+
+def _buildZJLX(content, l):
+    jzlx_url = baseUrl + 'zjlx/' + l
+    jzlx_text = _getBaiduStockHtml(jzlx_url)
+    # 如果资金流向为空，直接组装数据返回
+    if not jzlx_text:
+        pass
+    else:
+        _parserBaiduStockJzlx(jzlx_text, content, content['gpMain']['execute_date'])
+
+
+def _buildLHB(content, l):
+    lhb_url = baseUrl + 'lhb/' + l
+    lhb_text = _getBaiduStockHtml(lhb_url)
+    if not lhb_text:
+        pass
+    else:
+        _parserBaiduStockLhb(lhb_text, content)
 
 
 def _buildData(content, count, data, threadName, path):
@@ -229,7 +237,6 @@ if __name__ == '__main__':
         # 每个线程处理数量
         step = 100
         i = 1
-        threads = Queue()
         while i <= size // step:
             l = stockList[0:step]
             stockList = stockList[len(l):size]
